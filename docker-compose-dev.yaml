@@ -1,0 +1,45 @@
+version: "3.8"
+services:
+  spring-boot-app:
+    build:
+      context: .
+      dockerfile: docker-files/app.dockerfile
+    ports:
+      - 8000:8080
+      - 9000:9000
+    entrypoint: java -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=9000 -jar app.jar
+    volumes:
+      - ./build/libs/demo-0.0.1-SNAPSHOT.jar:/app/app.jar
+    depends_on:
+      - mysql-rest-api
+
+  mysql-rest-api:
+    image: 'mysql:8.0.15'
+    ports:
+      - 3306:3306
+    env_file:
+      - docker-env/mysql-rest-api.env
+    volumes:
+      - dbdata:/var/lib/mysql
+
+  mysql-keycloak:
+    image: 'mysql:8.0.15'
+    ports:
+      - 3000:3306
+    env_file:
+      - ./docker-env/mysql-keycloak.env
+    volumes:
+      - ./keycloak-DB-data:/var/lib/mysql
+
+  keycloak:
+    image: 'jboss/keycloak:12.0.4'
+    ports:
+      - 8080:8080
+    env_file:
+      - ./docker-env/keycloak.env
+    depends_on:
+      - mysql-keycloak
+
+volumes:
+  dbdata:
+
